@@ -124,6 +124,17 @@ class GemminiModule[T <: Data: Arithmetic, U <: Data, V <: Data]
   val reservation_station = withClock (gated_clock) { Module(new ReservationStation(outer.config, new GemminiCmd(reservation_station_entries))) }
   counters.io.event_io.collect(reservation_station.io.counter)
 
+
+  // nk >>
+  val (cycle_counter, _) = Counter(true.B, 1000000000) // timeout cycles
+  val start =  RegInit(false.B)
+  when (io.cmd.valid && !(start)) {
+    printf("EVENT %d Gemmini start\n", cycle_counter)
+    start := true.B
+  }
+  // << nk
+  
+
   when (io.cmd.valid && io.cmd.bits.inst.funct === CLKGATE_EN && !io.busy) {
     clock_en_reg := io.cmd.bits.rs1(0)
   }
